@@ -448,14 +448,50 @@ document.getElementById('settingsResetBtn').addEventListener('click', () => {
 
 // --- First Launch Wizard ---
 let wizardStep = 1;
-const WIZARD_STEPS = 4;
+const WIZARD_STEPS = 7;
 let wizardUnit = 'mmol';
 let wizardRatios = [10];
+let wizardDiaMode = 'preset';
+let wizardDiaValue = 4;
 
 function openWizard() {
     wizardStep = 1;
-    wizardUnit = 'mmol';
-    wizardRatios = [10];
+    wizardUnit = settings.units || 'mmol';
+    wizardRatios = ratios.length ? [...ratios] : [10];
+    wizardDiaMode = [3, 4, 5].includes(settings.dia) ? 'preset' : 'custom';
+    wizardDiaValue = settings.dia || 4;
+
+    // Set unit toggle to current
+    document.querySelectorAll('#wizardUnitToggle .unit-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.unit === wizardUnit);
+    });
+
+    // Pre-fill inputs when re-entering
+    if (settings.setupComplete) {
+        document.getElementById('wTargetBg').value = settings.targetBg;
+        document.getElementById('wIsf').value = settings.isf;
+        document.getElementById('wInsulinType').value = settings.insulinType;
+    } else {
+        document.getElementById('wTargetBg').value = '';
+        document.getElementById('wIsf').value = '';
+        document.getElementById('wInsulinType').value = '';
+    }
+
+    // Set DIA presets
+    document.querySelectorAll('.dia-preset-btn').forEach(btn => {
+        if (wizardDiaMode === 'preset') {
+            btn.classList.toggle('active', parseFloat(btn.dataset.dia) === wizardDiaValue);
+        } else {
+            btn.classList.toggle('active', btn.dataset.dia === 'custom');
+        }
+    });
+    if (wizardDiaMode === 'custom') {
+        document.getElementById('diaCustomField').style.display = '';
+        document.getElementById('wDia').value = wizardDiaValue;
+    } else {
+        document.getElementById('diaCustomField').style.display = 'none';
+    }
+
     renderWizardStep();
     renderWizardRatios();
     document.getElementById('wizardOverlay').classList.remove('hidden');
@@ -469,24 +505,36 @@ function renderWizardStep() {
     document.querySelectorAll('.wizard-step').forEach(step => {
         step.classList.toggle('active', parseInt(step.dataset.step) === wizardStep);
     });
+
+    // Progress indicator
     document.getElementById('wizardProgressBar').style.width = (wizardStep / WIZARD_STEPS * 100) + '%';
+    document.getElementById('wizardStepCounter').textContent = `Step ${wizardStep} of ${WIZARD_STEPS}`;
+
+    // Navigation visibility
     document.getElementById('wizardBackBtn').style.visibility = wizardStep === 1 ? 'hidden' : 'visible';
-    document.getElementById('wizardNextBtn').textContent = wizardStep === WIZARD_STEPS ? 'Done' : 'Next';
+    const skipBtn = document.getElementById('wizardSkipBtn');
+    if (wizardStep === WIZARD_STEPS) {
+        // Done screen
+        document.getElementById('wizardNextBtn').textContent = 'Start Calculating';
+        skipBtn.style.display = 'none';
+        document.getElementById('wizardBackBtn').style.visibility = 'hidden';
+    } else {
+        document.getElementById('wizardNextBtn').textContent = 'Next';
+        skipBtn.style.display = '';
+    }
 
     // Update unit labels in wizard
     const unitStr = wizardUnit === 'mmol' ? 'mmol/L' : 'mg/dL';
     document.querySelectorAll('#wizardOverlay .unit-label').forEach(el => el.textContent = unitStr);
     document.querySelectorAll('#wizardOverlay .unit-label-per').forEach(el => el.textContent = unitStr + '/unit');
 
-    // Set default placeholders based on units
+    // Set placeholders based on units
+    const tInput = document.getElementById('wTargetBg');
+    const iInput = document.getElementById('wIsf');
     if (wizardUnit === 'mgdl') {
-        const tInput = document.getElementById('wTargetBg');
-        const iInput = document.getElementById('wIsf');
         if (tInput && !tInput.value) tInput.placeholder = '100';
         if (iInput && !iInput.value) iInput.placeholder = '45';
     } else {
-        const tInput = document.getElementById('wTargetBg');
-        const iInput = document.getElementById('wIsf');
         if (tInput && !tInput.value) tInput.placeholder = '5.5';
         if (iInput && !iInput.value) iInput.placeholder = '2.5';
     }
@@ -504,22 +552,30 @@ function renderWizardRatios() {
     `).join('');
 }
 
+function saveWizardValues() {
+    settings.units = wizardUnit;
+    settings.isf = parseFloat(document.getElementById('wIsf').value) || (wizardUnit === 'mgdl' ? 45 : 2.5);
+    settings.targetBg = parseFloat(document.getElementById('wTargetBg').value) || (wizardUnit === 'mgdl' ? 100 : 5.5);
+    settings.dia = wizardDiaMode === 'custom' ? (parseFloat(document.getElementById('wDia').value) || 4) : wizardDiaValue;
+    settings.insulinType = document.getElementById('wInsulinType').value;
+    settings.setupComplete = true;
+
+    // Save ratios
+    ratios.length = 0;
+    wizardRatios.forEach(r => ratios.push(r));
+    selectedRatioIndex = 0;
+    saveRatios();
+
+    localStorage.removeItem('wizardSkipped');
+    saveSettings();
+    updateSettingsSummary();
+    calculate();
+    hideSetupBanner();
+}
+
 // Wizard navigation
 document.getElementById('wizardNextBtn').addEventListener('click', () => {
     // Validate current step
-    if (wizardStep === 2) {
-        const t = parseFloat(document.getElementById('wTargetBg').value);
-        const i = parseFloat(document.getElementById('wIsf').value);
-        if (!t || t <= 0) {
-            document.getElementById('wTargetBg').focus();
-            return;
-        }
-        if (!i || i <= 0) {
-            document.getElementById('wIsf').focus();
-            return;
-        }
-    }
-
     if (wizardStep === 3) {
         // Read ratios from wizard inputs
         const inputs = document.querySelectorAll('.w-ratio-input');
@@ -531,26 +587,32 @@ document.getElementById('wizardNextBtn').addEventListener('click', () => {
         if (wizardRatios.length === 0) wizardRatios = [10];
     }
 
+    if (wizardStep === 4) {
+        const i = parseFloat(document.getElementById('wIsf').value);
+        if (!i || i <= 0) {
+            document.getElementById('wIsf').focus();
+            return;
+        }
+    }
+
+    if (wizardStep === 5) {
+        const t = parseFloat(document.getElementById('wTargetBg').value);
+        if (!t || t <= 0) {
+            document.getElementById('wTargetBg').focus();
+            return;
+        }
+    }
+
+    if (wizardStep === 6) {
+        // Save all values on transition to Done screen
+        saveWizardValues();
+    }
+
     if (wizardStep < WIZARD_STEPS) {
         wizardStep++;
         renderWizardStep();
     } else {
-        // Finish: save all wizard values
-        settings.units = wizardUnit;
-        settings.targetBg = parseFloat(document.getElementById('wTargetBg').value) || 5.5;
-        settings.isf = parseFloat(document.getElementById('wIsf').value) || 2.0;
-        settings.dia = parseFloat(document.getElementById('wDia').value) || 4;
-        settings.insulinType = document.getElementById('wInsulinType').value;
-        settings.setupComplete = true;
-
-        // Save ratios from wizard
-        ratios.length = 0;
-        wizardRatios.forEach(r => ratios.push(r));
-        selectedRatioIndex = 0;
-        saveRatios();
-        saveSettings();
-        updateSettingsSummary();
-        calculate();
+        // Step 7 (Done) — just close
         closeWizard();
     }
 });
@@ -562,6 +624,16 @@ document.getElementById('wizardBackBtn').addEventListener('click', () => {
     }
 });
 
+// Skip wizard
+document.getElementById('wizardSkipBtn').addEventListener('click', () => {
+    localStorage.setItem('wizardSkipped', 'true');
+    saveSettings();
+    updateSettingsSummary();
+    calculate();
+    closeWizard();
+    showSetupBanner();
+});
+
 // Wizard unit toggle
 document.getElementById('wizardUnitToggle').addEventListener('click', (e) => {
     const btn = e.target.closest('.unit-btn');
@@ -570,6 +642,24 @@ document.getElementById('wizardUnitToggle').addEventListener('click', (e) => {
     btn.classList.add('active');
     wizardUnit = btn.dataset.unit;
     renderWizardStep();
+});
+
+// DIA preset buttons
+document.getElementById('diaPresets').addEventListener('click', (e) => {
+    const btn = e.target.closest('.dia-preset-btn');
+    if (!btn) return;
+    document.querySelectorAll('.dia-preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (btn.dataset.dia === 'custom') {
+        wizardDiaMode = 'custom';
+        document.getElementById('diaCustomField').style.display = '';
+        document.getElementById('wDia').focus();
+    } else {
+        wizardDiaMode = 'preset';
+        wizardDiaValue = parseFloat(btn.dataset.dia);
+        document.getElementById('diaCustomField').style.display = 'none';
+    }
 });
 
 // Wizard ratio add/remove
@@ -589,6 +679,34 @@ document.getElementById('wRatioList').addEventListener('click', (e) => {
     }
 });
 
+// --- Setup Banner ---
+function showSetupBanner() {
+    document.getElementById('setupBanner').classList.remove('hidden');
+}
+
+function hideSetupBanner() {
+    document.getElementById('setupBanner').classList.add('hidden');
+}
+
+document.getElementById('setupBanner').addEventListener('click', (e) => {
+    if (!e.target.closest('.setup-banner-dismiss')) {
+        openWizard();
+        hideSetupBanner();
+    }
+});
+
+document.getElementById('setupBannerDismiss').addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideSetupBanner();
+    localStorage.removeItem('wizardSkipped');
+});
+
+// Re-enter wizard from settings
+document.getElementById('settingsRunWizardBtn').addEventListener('click', () => {
+    closeSettings();
+    openWizard();
+});
+
 // --- Init ---
 window.addEventListener('load', () => {
     el.manualUnits.value = localStorage.getItem('manualUnits') || '';
@@ -604,8 +722,12 @@ window.addEventListener('load', () => {
     updateSettingsSummary();
     calculate();
 
-    // Show wizard on first launch
+    // Show wizard or banner on launch
     if (!settings.setupComplete) {
-        openWizard();
+        if (localStorage.getItem('wizardSkipped') === 'true') {
+            showSetupBanner();
+        } else {
+            openWizard();
+        }
     }
 });

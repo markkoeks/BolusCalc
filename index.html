@@ -17,6 +17,12 @@
             </button>
         </header>
 
+        <!-- Setup incomplete banner -->
+        <div id="setupBanner" class="setup-banner hidden">
+            <span>Setup incomplete -- tap to finish configuring your settings.</span>
+            <button id="setupBannerDismiss" class="setup-banner-dismiss" aria-label="Dismiss">&times;</button>
+        </div>
+
         <!-- BG Input -->
         <section class="card">
             <div class="field">
@@ -164,6 +170,9 @@
                     </div>
                 </div>
                 <div class="settings-group">
+                    <button id="settingsRunWizardBtn" class="run-wizard-btn">Redo Setup Wizard</button>
+                </div>
+                <div class="settings-group">
                     <button id="settingsResetBtn" class="reset-settings-btn">Reset All Settings</button>
                 </div>
             </div>
@@ -173,43 +182,57 @@
     <!-- First Launch Wizard -->
     <div id="wizardOverlay" class="overlay hidden">
         <div class="overlay-content wizard-content">
-            <div class="wizard-progress">
-                <div class="wizard-progress-bar" id="wizardProgressBar"></div>
+            <div class="wizard-header">
+                <div class="wizard-step-counter" id="wizardStepCounter">Step 1 of 7</div>
+                <div class="wizard-progress">
+                    <div class="wizard-progress-bar" id="wizardProgressBar"></div>
+                </div>
             </div>
             <div class="wizard-step active" data-step="1">
                 <h2>Welcome to Bolus Calc</h2>
-                <p>Let's set up your insulin parameters. This takes less than a minute.</p>
-                <div class="settings-group">
-                    <h3 class="settings-group-title">Choose your units</h3>
-                    <div class="unit-toggle-row" id="wizardUnitToggle">
-                        <button class="unit-btn active" data-unit="mmol">mmol/L</button>
-                        <button class="unit-btn" data-unit="mgdl">mg/dL</button>
-                    </div>
-                </div>
+                <p>BolusCalc helps you calculate insulin bolus doses based on your personal settings. Let's set those up now -- it takes less than a minute.</p>
             </div>
             <div class="wizard-step" data-step="2">
-                <h2>Targets</h2>
-                <p>Set your target blood glucose and correction factor.</p>
-                <div class="field">
-                    <label for="wTargetBg">Target BG <span class="unit-label"></span></label>
-                    <input type="number" id="wTargetBg" inputmode="decimal" step="0.1" placeholder="5.5">
-                </div>
-                <div class="field" style="margin-top:14px">
-                    <label for="wIsf">Correction Factor (ISF) <span class="unit-label-per"></span></label>
-                    <input type="number" id="wIsf" inputmode="decimal" step="0.1" placeholder="2.5">
+                <h2>Choose Your Units</h2>
+                <p>Which unit does your glucose meter use?</p>
+                <div class="unit-toggle-row" id="wizardUnitToggle">
+                    <button class="unit-btn active" data-unit="mmol">mmol/L</button>
+                    <button class="unit-btn" data-unit="mgdl">mg/dL</button>
                 </div>
             </div>
             <div class="wizard-step" data-step="3">
                 <h2>Carb Ratios</h2>
-                <p>How many grams of carbs does 1 unit of insulin cover? You can add different ratios for different times of day.</p>
+                <p class="wizard-helper">Your insulin-to-carb ratio (ICR) tells you how many grams of carbohydrate one unit of insulin covers. For example, a ratio of 10 means 1 unit covers 10g of carbs. Your diabetes team can provide this number.</p>
                 <div id="wRatioList"></div>
                 <button id="wAddRatio" class="add-ratio-btn" style="margin-top:10px">+ Add Ratio</button>
             </div>
             <div class="wizard-step" data-step="4">
-                <h2>Insulin Details</h2>
-                <p>How long does your insulin stay active, and what type do you use?</p>
+                <h2>Correction Factor</h2>
+                <p class="wizard-helper">Your insulin sensitivity factor (ISF) is how much one unit of insulin lowers your blood glucose. For example, an ISF of 2.5 means 1 unit drops your BG by 2.5. Your diabetes team can advise.</p>
                 <div class="field">
-                    <label for="wDia">Active Insulin Time (hours)</label>
+                    <label for="wIsf">Correction Factor (ISF) <span class="unit-label-per"></span></label>
+                    <input type="number" id="wIsf" inputmode="decimal" step="0.1" placeholder="2.5">
+                </div>
+            </div>
+            <div class="wizard-step" data-step="5">
+                <h2>Target Glucose</h2>
+                <p class="wizard-helper">This is the blood glucose level you aim for. The calculator uses it to work out correction doses when your BG is above target.</p>
+                <div class="field">
+                    <label for="wTargetBg">Target BG <span class="unit-label"></span></label>
+                    <input type="number" id="wTargetBg" inputmode="decimal" step="0.1" placeholder="5.5">
+                </div>
+            </div>
+            <div class="wizard-step" data-step="6">
+                <h2>Active Insulin Time</h2>
+                <p class="wizard-helper">Duration of Insulin Action (DIA) is how long your rapid insulin stays active. Most rapid-acting insulins are active for 3-5 hours. Your diabetes team can advise.</p>
+                <div class="dia-presets" id="diaPresets">
+                    <button class="dia-preset-btn" data-dia="3">3h</button>
+                    <button class="dia-preset-btn active" data-dia="4">4h</button>
+                    <button class="dia-preset-btn" data-dia="5">5h</button>
+                    <button class="dia-preset-btn" data-dia="custom">Custom</button>
+                </div>
+                <div class="field dia-custom-field" id="diaCustomField" style="display:none; margin-top:14px">
+                    <label for="wDia">Custom DIA (hours)</label>
                     <input type="number" id="wDia" inputmode="decimal" step="0.5" min="2" max="8" placeholder="4">
                 </div>
                 <div class="field" style="margin-top:14px">
@@ -226,9 +249,19 @@
                     </select>
                 </div>
             </div>
+            <div class="wizard-step" data-step="7">
+                <div class="wizard-done">
+                    <div class="wizard-done-icon">&#10003;</div>
+                    <h2>You're All Set</h2>
+                    <p>Your settings have been saved. You can change them any time from the settings screen.</p>
+                </div>
+            </div>
             <div class="wizard-nav">
                 <button id="wizardBackBtn" class="wizard-btn-back" style="visibility:hidden">Back</button>
-                <button id="wizardNextBtn" class="wizard-btn-next">Next</button>
+                <div class="wizard-nav-right">
+                    <button id="wizardSkipBtn" class="wizard-btn-skip">Skip for now</button>
+                    <button id="wizardNextBtn" class="wizard-btn-next">Next</button>
+                </div>
             </div>
         </div>
     </div>
