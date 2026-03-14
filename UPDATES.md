@@ -10,6 +10,12 @@
 - PWA `start_url` updated to `calculator.html` so installed app opens directly to the calculator
 - Service worker cache bumped to v3, now caches both pages and both stylesheets
 
+### Community feedback form
+- Integrated Tally feedback form for feature suggestions, bug reports, and general feedback
+- Landing page: dedicated "Got a suggestion?" section with CTA button
+- Calculator: subtle "Share feedback" link in the footer
+- Opens in new tab to keep users in the app
+
 ### Input validation — carbs and BG fields
 - Carbs field now only accepts digits, `.`, and `+` (for math expressions)
 - BG field only accepts digits and `.`
