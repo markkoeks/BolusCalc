@@ -6,58 +6,101 @@
     <title>Bolus Calc</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2c3e50">
+    <meta name="theme-color" content="#4f46e5">
 </head>
 <body>
     <div class="container">
         <header><h1>Bolus Calc</h1></header>
 
-        <section class="input-group">
+        <!-- BG Input -->
+        <section class="card">
             <div class="field">
-                <label for="currentBg">Current BG (Math allowed: e.g. 5.2+1.5)</label>
+                <label for="currentBg">Current BG</label>
                 <input type="text" id="currentBg" inputmode="decimal" placeholder="0" autofocus>
-            </div>
-            <div class="field">
-                <label for="carbs">Carbs (Math allowed: e.g. 45+12+10)</label>
-                <input type="text" id="carbs" inputmode="decimal" placeholder="0">
+                <span class="sum-badge" id="bgSum"></span>
             </div>
         </section>
 
-        <section class="settings-group">
-            <div class="field-third">
-                <label for="targetBg">Target</label>
-                <input type="number" id="targetBg" step="0.1">
-            </div>
-            <div class="field-third">
-                <label for="isf">ISF</label>
-                <input type="number" id="isf" step="0.1">
-            </div>
-            <div class="field-third">
-                <label for="carbRatio">Ratio</label>
-                <input type="number" id="carbRatio" step="0.1">
-            </div>
-            <div class="field-half" style="margin-top: 10px;">
-                <label for="dia">DIA (Duration - Hours)</label>
-                <input type="number" id="dia" step="0.5" value="4">
+        <!-- Carb Input with Sum Badge -->
+        <section class="card">
+            <div class="field">
+                <label for="carbs">Carbs <span class="hint">use + to add up, e.g. 5+3+10</span></label>
+                <input type="text" id="carbs" inputmode="decimal" placeholder="0">
+                <span class="sum-badge" id="carbsSum"></span>
             </div>
         </section>
-        <section class="iob-display">
-            <div class="result-row">
-                <span>Est. Active Insulin (IOB):</span>
-                <strong id="iobValue">0.00 u</strong>
+
+        <!-- IOB Section -->
+        <section class="card">
+            <label class="section-label">Insulin On Board (IOB)</label>
+            <div class="iob-toggle">
+                <input type="radio" name="iobMode" id="iobAuto" value="auto" checked>
+                <label for="iobAuto">Auto</label>
+                <input type="radio" name="iobMode" id="iobManual" value="manual">
+                <label for="iobManual">Manual</label>
+            </div>
+            <div id="iobAutoPanel" class="iob-panel">
+                <div class="iob-value">
+                    <span>From history:</span>
+                    <strong id="iobValueAuto">0.00 u</strong>
+                </div>
+            </div>
+            <div id="iobManualPanel" class="iob-panel" style="display:none;">
+                <div class="field-row">
+                    <div class="field-half">
+                        <label for="manualUnits">Units given</label>
+                        <input type="number" id="manualUnits" inputmode="decimal" step="0.5" placeholder="0">
+                    </div>
+                    <div class="field-half">
+                        <label for="manualHoursAgo">Hours ago</label>
+                        <input type="number" id="manualHoursAgo" inputmode="decimal" step="0.5" placeholder="0">
+                    </div>
+                </div>
+                <div class="iob-value">
+                    <span>Remaining:</span>
+                    <strong id="iobValueManual">0.00 u</strong>
+                </div>
             </div>
         </section>
-        <section id="resultsSection" class="results">
-            <div class="total-row">
-                <strong>Total (minus IOB):</strong>
-                <strong id="outTotal">0.00</strong>
+
+        <!-- Ratio Results (centerpiece) -->
+        <section class="card results-card">
+            <label class="section-label">Bolus by Ratio</label>
+            <div class="ratio-header">
+                <span class="ratio-col-label">Ratio</span>
+                <span class="ratio-col-label">Carb</span>
+                <span class="ratio-col-label">Corr</span>
+                <span class="ratio-col-label">Total</span>
+                <span class="ratio-col-label ratio-col-action"></span>
             </div>
-            </section>
-        
-        <section class="history-card">
-            <label>Recent Boluses</label>
+            <div id="ratioResults"></div>
+            <button id="addRatioBtn" class="add-ratio-btn">+ Add Ratio</button>
+        </section>
+
+        <!-- Settings (collapsible) -->
+        <details class="card settings-card">
+            <summary>Settings</summary>
+            <div class="settings-grid">
+                <div class="field">
+                    <label for="targetBg">Target BG</label>
+                    <input type="number" id="targetBg" inputmode="decimal" step="0.1">
+                </div>
+                <div class="field">
+                    <label for="isf">ISF</label>
+                    <input type="number" id="isf" inputmode="decimal" step="0.1">
+                </div>
+                <div class="field">
+                    <label for="dia">DIA (hours)</label>
+                    <input type="number" id="dia" inputmode="decimal" step="0.5" value="4">
+                </div>
+            </div>
+        </details>
+
+        <!-- History + Log -->
+        <section class="card">
+            <label class="section-label">Recent Boluses</label>
             <div id="historyList"></div>
-            <button id="addBolusBtn" class="use-total-btn" style="margin-top:10px; background: var(--accent);">Log This Bolus</button>
+            <button id="addBolusBtn" class="log-btn">Log This Bolus</button>
         </section>
 
         <footer>
