@@ -17,7 +17,7 @@ const settings = {
 // Migration from old single carbRatio
 if (!ratios) {
     const oldRatio = parseFloat(localStorage.getItem('carbRatio'));
-    ratios = oldRatio ? [oldRatio] : [8, 10, 12, 15];
+    ratios = oldRatio ? [oldRatio] : [10];
     localStorage.removeItem('carbRatio');
     localStorage.setItem('ratios', JSON.stringify(ratios));
 }
@@ -457,7 +457,7 @@ let wizardDiaValue = 4;
 function openWizard() {
     wizardStep = 1;
     wizardUnit = settings.units || 'mmol';
-    wizardRatios = ratios.length ? [...ratios] : [10];
+    wizardRatios = settings.setupComplete && ratios.length ? [...ratios] : [10];
     wizardDiaMode = [3, 4, 5].includes(settings.dia) ? 'preset' : 'custom';
     wizardDiaValue = settings.dia || 4;
 
