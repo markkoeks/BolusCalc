@@ -113,6 +113,18 @@
             <button id="resetBtn" class="reset-button">Clear All</button>
             <p class="disclaimer"><a href="#" id="disclaimerLink">Calculation aid only. Not medical advice.</a></p>
         </footer>
+
+        <!-- PWA Install Banner -->
+        <div id="installBanner" class="install-banner hidden">
+            <div class="install-banner-content">
+                <span class="install-banner-text">Add to your home screen for the best experience</span>
+                <span class="install-banner-hint" id="installHint"></span>
+            </div>
+            <div class="install-banner-actions">
+                <button id="installBtn" class="install-btn">Install</button>
+                <button id="installDismiss" class="install-dismiss" aria-label="Dismiss">&times;</button>
+            </div>
+        </div>
     </div>
     <!-- Settings Overlay -->
     <div id="settingsOverlay" class="overlay hidden">

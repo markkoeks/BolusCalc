@@ -33,3 +33,12 @@
 - Footer note is now tappable -- opens a full About screen with the complete disclaimer and app description
 - About screen also explains that all data is stored locally (no server)
 - Disclaimer acceptance persisted in localStorage so it only shows once
+
+### PWA install prompt
+- Subtle install banner appears after 10 seconds or on first user interaction
+- Android Chrome: triggers native `beforeinstallprompt` with an Install button
+- iOS Safari: shows manual instruction ("Tap the Share button, then Add to Home Screen")
+- Other browsers: shows a hint to use the browser menu
+- Dismissible with 7-day cooldown (does not reappear until cooldown expires)
+- Detects standalone mode and `appinstalled` event -- never shows once installed
+- Install state persisted via `pwaInstalled` in localStorage

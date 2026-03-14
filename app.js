@@ -725,6 +725,81 @@ document.getElementById('disclaimerBack').addEventListener('click', () => {
     document.getElementById('disclaimerOverlay').classList.add('hidden');
 });
 
+// --- PWA Install Prompt ---
+let deferredInstallPrompt = null;
+
+// Capture Android's beforeinstallprompt
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+});
+
+function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+}
+
+function isIos() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function shouldShowInstallBanner() {
+    if (isStandalone()) return false;
+    if (localStorage.getItem('pwaInstalled') === 'true') return false;
+    const dismissed = localStorage.getItem('installDismissed');
+    if (dismissed) {
+        const dismissedAt = parseInt(dismissed);
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        if (Date.now() - dismissedAt < sevenDays) return false;
+    }
+    return true;
+}
+
+function showInstallBanner() {
+    if (!shouldShowInstallBanner()) return;
+
+    const banner = document.getElementById('installBanner');
+    const hint = document.getElementById('installHint');
+    const installBtn = document.getElementById('installBtn');
+
+    if (isIos()) {
+        hint.textContent = 'Tap the Share button, then "Add to Home Screen"';
+        installBtn.style.display = 'none';
+    } else if (deferredInstallPrompt) {
+        hint.textContent = '';
+    } else {
+        // Desktop or unsupported browser — still show but with hint
+        hint.textContent = 'Use your browser menu to install this app';
+        installBtn.style.display = 'none';
+    }
+
+    banner.classList.remove('hidden');
+}
+
+document.getElementById('installBtn').addEventListener('click', () => {
+    if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then(result => {
+            if (result.outcome === 'accepted') {
+                localStorage.setItem('pwaInstalled', 'true');
+            }
+            deferredInstallPrompt = null;
+            document.getElementById('installBanner').classList.add('hidden');
+        });
+    }
+});
+
+document.getElementById('installDismiss').addEventListener('click', () => {
+    document.getElementById('installBanner').classList.add('hidden');
+    localStorage.setItem('installDismissed', Date.now().toString());
+});
+
+// Detect install after the fact
+window.addEventListener('appinstalled', () => {
+    localStorage.setItem('pwaInstalled', 'true');
+    document.getElementById('installBanner').classList.add('hidden');
+});
+
 // --- Init ---
 window.addEventListener('load', () => {
     el.manualUnits.value = localStorage.getItem('manualUnits') || '';
@@ -749,5 +824,19 @@ window.addEventListener('load', () => {
         } else {
             openWizard();
         }
+    }
+
+    // PWA install prompt: show after 10s or first interaction
+    if (shouldShowInstallBanner()) {
+        let installShown = false;
+        const triggerInstall = () => {
+            if (installShown) return;
+            installShown = true;
+            clearTimeout(installTimer);
+            showInstallBanner();
+        };
+        const installTimer = setTimeout(triggerInstall, 10000);
+        document.addEventListener('click', triggerInstall, { once: true });
+        document.addEventListener('input', triggerInstall, { once: true });
     }
 });
