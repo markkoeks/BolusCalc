@@ -1,25 +1,26 @@
 :root {
-    --bg: #f0f2f5;
-    --card: #ffffff;
-    --text: #1a1a2e;
-    --text-secondary: #6b7280;
-    --accent: #4f46e5;
-    --accent-light: #eef2ff;
-    --border: #e5e7eb;
-    --input-bg: #f8f9fb;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --radius: 16px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --bg: #F7FAF9;
+    --card: #FFFFFF;
+    --text: #2C2C2A;
+    --text-secondary: #5F5E5A;
+    --label: #0F6E56;
+    --accent: #1D9E75;
+    --accent-light: #E1F5EE;
+    --accent-dark: #04342C;
+    --border: #9FE1CB;
+    --input-bg: #FFFFFF;
+    --radius: 14px;
+    --radius-input: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
 }
 
 * { box-sizing: border-box; touch-action: manipulation; margin: 0; padding: 0; }
 
 body {
-    font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding: 16px;
+    padding: 18px;
     -webkit-font-smoothing: antialiased;
 }
 
@@ -28,39 +29,39 @@ body {
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
 }
 
 header h1 {
     text-align: center;
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--text-secondary);
+    color: var(--accent-dark);
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    padding: 4px 0;
+    padding: 6px 0;
 }
 
 /* Cards */
 .card, details.settings-card {
     background: var(--card);
-    padding: 16px;
+    padding: 20px;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
 }
 
 /* Fields */
-.field { margin-bottom: 4px; }
+.field { margin-bottom: 6px; }
 .field:last-child { margin-bottom: 0; }
 
 label {
     display: block;
     font-size: 0.7rem;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
+    color: var(--label);
+    margin-bottom: 8px;
 }
 
 label .hint {
@@ -71,27 +72,27 @@ label .hint {
 }
 
 .section-label {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     font-size: 0.75rem;
 }
 
 input[type="text"],
 input[type="number"] {
     width: 100%;
-    padding: 12px 14px;
+    padding: 14px 16px;
     font-size: 1.15rem;
     font-weight: 500;
-    border: 2px solid var(--border);
-    border-radius: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
     background: var(--input-bg);
     color: var(--text);
-    transition: border-color 0.2s, background 0.2s;
+    transition: border-color 0.2s, border-width 0.2s, background 0.2s;
     -webkit-appearance: none;
     appearance: none;
 }
 
 input:focus {
-    border-color: var(--accent);
+    border: 1.5px solid var(--accent);
     background: var(--card);
     outline: none;
 }
@@ -114,10 +115,10 @@ input:focus {
 /* IOB Toggle (segmented control) */
 .iob-toggle {
     display: flex;
-    background: var(--input-bg);
-    border-radius: 10px;
+    background: var(--accent-light);
+    border-radius: var(--radius-input);
     padding: 3px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     gap: 3px;
 }
 
@@ -128,7 +129,7 @@ input:focus {
 .iob-toggle label {
     flex: 1;
     text-align: center;
-    padding: 8px 0;
+    padding: 9px 0;
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-secondary);
@@ -143,7 +144,7 @@ input:focus {
 .iob-toggle input[type="radio"]:checked + label {
     background: var(--card);
     color: var(--accent);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .iob-panel { /* shared */ }
@@ -152,10 +153,10 @@ input:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 14px;
+    padding: 12px 16px;
     background: var(--accent-light);
-    border-radius: 10px;
-    margin-top: 8px;
+    border-radius: var(--radius-input);
+    margin-top: 10px;
 }
 
 .iob-value span {
@@ -165,7 +166,7 @@ input:focus {
 
 .iob-value strong {
     font-size: 1.1rem;
-    color: var(--accent);
+    color: var(--accent-dark);
 }
 
 .field-row {
@@ -186,14 +187,14 @@ input:focus {
     display: grid;
     grid-template-columns: 70px 1fr 1fr 1fr 36px;
     gap: 4px;
-    padding: 0 4px 8px;
+    padding: 0 4px 10px;
     border-bottom: 1px solid var(--border);
     margin-bottom: 4px;
 }
 
 .ratio-col-label {
     font-size: 0.65rem;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
     color: var(--text-secondary);
     letter-spacing: 0.04em;
@@ -204,15 +205,15 @@ input:focus {
     grid-template-columns: 70px 1fr 1fr 1fr 36px;
     gap: 4px;
     align-items: center;
-    padding: 10px 4px;
-    border-radius: 10px;
+    padding: 12px 4px;
+    border-radius: var(--radius-input);
     cursor: pointer;
     transition: background 0.15s;
     border-left: 3px solid transparent;
 }
 
 .ratio-row:hover {
-    background: var(--input-bg);
+    background: var(--accent-light);
 }
 
 .ratio-row.selected {
@@ -255,7 +256,7 @@ input:focus {
 .ratio-row .ratio-total {
     font-size: 1.05rem;
     font-weight: 700;
-    color: var(--text);
+    color: var(--accent-dark);
 }
 
 .ratio-row.selected .ratio-total {
@@ -278,11 +279,11 @@ input:focus {
 
 .add-ratio-btn {
     width: 100%;
-    padding: 10px;
-    margin-top: 8px;
+    padding: 12px;
+    margin-top: 10px;
     background: none;
     border: 2px dashed var(--border);
-    border-radius: 10px;
+    border-radius: var(--radius-input);
     color: var(--text-secondary);
     font-size: 0.85rem;
     font-weight: 600;
@@ -298,10 +299,10 @@ input:focus {
 /* Settings */
 details.settings-card summary {
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--text-secondary);
+    color: var(--label);
     cursor: pointer;
     list-style: none;
     display: flex;
@@ -314,6 +315,7 @@ details.settings-card summary::-webkit-details-marker { display: none; }
 details.settings-card summary::after {
     content: '\25BC';
     font-size: 0.6rem;
+    color: var(--accent);
     transition: transform 0.2s;
 }
 
@@ -325,7 +327,7 @@ details.settings-card[open] summary::after {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
-    margin-top: 14px;
+    margin-top: 16px;
 }
 
 .settings-grid input {
@@ -338,8 +340,8 @@ details.settings-card[open] summary::after {
 .history-item {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--input-bg);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--accent-light);
     font-size: 0.9rem;
     color: var(--text-secondary);
 }
@@ -356,24 +358,24 @@ details.settings-card[open] summary::after {
     padding: 0;
     font-size: 1.4rem;
     font-weight: 700;
-    color: #04342C;
-    background: #E1F5EE;
-    border: 2px solid #9FE1CB;
-    border-radius: 10px;
+    color: var(--accent-dark);
+    background: var(--accent-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
     cursor: pointer;
     flex-shrink: 0;
 }
-.plus-btn:active { background: #9FE1CB; }
+.plus-btn:active { background: var(--border); }
 
 /* Buttons */
 .log-btn {
     width: 100%;
-    padding: 14px;
-    margin-top: 12px;
+    padding: 16px;
+    margin-top: 14px;
     background: var(--accent);
     color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: var(--radius-input);
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
@@ -387,7 +389,7 @@ details.settings-card[open] summary::after {
     background: none;
     border: none;
     color: var(--text-secondary);
-    padding: 12px;
+    padding: 14px;
     font-size: 0.8rem;
     text-decoration: underline;
     cursor: pointer;
@@ -401,7 +403,7 @@ details.settings-card[open] summary::after {
     text-align: center;
     color: var(--text-secondary);
     opacity: 0.5;
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
-footer { padding-top: 4px; }
+footer { padding-top: 6px; }
