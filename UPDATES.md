@@ -2,6 +2,17 @@
 
 ## 2026-03-14 (v4)
 
+### Dark mode
+- Sun/moon toggle button in the calculator header
+- Dark color palette with green accent preserved across all components, cards, inputs, overlays, and modals
+- Respects system `prefers-color-scheme` on first visit; explicit toggle overrides and persists via localStorage
+- Mobile browser chrome (`theme-color` meta) updates dynamically to match
+- Flash-free: theme applied synchronously before DOM renders
+
+### Analytics
+- Vercel Web Analytics script added to both `index.html` and `calculator.html`
+- Privacy-friendly: no cookies, no individual user tracking, GDPR-compliant
+
 ### Critical fixes
 - Service worker now registered in both `index.html` and `calculator.html` -- offline mode actually works
 - Replaced placeholder PWA icons (via.placeholder.com) with proper mint green bulb icons (192x192 and 512x512 PNGs)
