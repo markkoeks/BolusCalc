@@ -93,6 +93,16 @@ elements.addBolusBtn.addEventListener('click', () => {
     }
 });
 
+// Plus button: append "+" to carbs input (no stacking)
+document.getElementById('carbsPlusBtn').addEventListener('click', () => {
+    const input = elements.carbs;
+    const val = input.value;
+    if (val.length > 0 && !val.endsWith('+')) {
+        input.value = val + '+';
+        input.focus();
+    }
+});
+
 // Update calculate interval to refresh IOB every minute
 setInterval(calculate, 60000);
 

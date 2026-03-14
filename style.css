@@ -25,3 +25,19 @@ input:focus { border-color: var(--accent); background: white; outline: none; }
     font-size: 0.9rem;
 }
 .history-item:last-child { border: none; }
+.input-with-btn { display: flex; gap: 8px; }
+.input-with-btn input { flex: 1; min-width: 0; }
+.plus-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #04342C;
+    background: #E1F5EE;
+    border: 2px solid #9FE1CB;
+    border-radius: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.plus-btn:active { background: #9FE1CB; }
