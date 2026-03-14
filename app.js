@@ -70,7 +70,7 @@ if (!ratios) {
 
 // Migration: plain number arrays -> ratio objects with label/time
 if (ratios.length > 0 && typeof ratios[0] === 'number') {
-    ratios = ratios.map(r => ({ ratio: r, label: '', startHour: null, endHour: null }));
+    ratios = ratios.map(r => ({ ratio: r, label: '' }));
     localStorage.setItem('ratios', JSON.stringify(ratios));
 }
 
@@ -142,28 +142,6 @@ function calculateManualIOB() {
     return units * iobCurve(hoursAgo, diaHours, profile.peak);
 }
 
-// --- Time-aware ratio helpers ---
-function getCurrentHour() {
-    return new Date().getHours() + new Date().getMinutes() / 60;
-}
-
-function isRatioActiveNow(ratioObj) {
-    if (ratioObj.startHour == null || ratioObj.endHour == null) return false;
-    const now = getCurrentHour();
-    if (ratioObj.startHour <= ratioObj.endHour) {
-        return now >= ratioObj.startHour && now < ratioObj.endHour;
-    }
-    // Wraps midnight
-    return now >= ratioObj.startHour || now < ratioObj.endHour;
-}
-
-function getTimeActiveIndex() {
-    for (let i = 0; i < ratios.length; i++) {
-        if (isRatioActiveNow(ratios[i])) return i;
-    }
-    return -1;
-}
-
 // --- Main Calculation ---
 function calculate() {
     const bg = solve(el.currentBg.value);
@@ -183,9 +161,6 @@ function calculate() {
     updateSumBadge(el.currentBg, el.bgSum);
     updateSumBadge(el.carbs, el.carbsSum, 'g');
 
-    // Auto-select time-active ratio if applicable
-    const timeActiveIdx = getTimeActiveIndex();
-
     // Calculate for each ratio
     const results = ratios.map(ratioObj => {
         const ratio = ratioObj.ratio;
@@ -193,10 +168,10 @@ function calculate() {
         const correction = bg > target ? (bg - target) / isf : 0;
         const total = Math.max(0, carbBolus + correction - iob);
         const rounded = Math.round(total * 2) / 2;
-        return { ratio, label: ratioObj.label, startHour: ratioObj.startHour, endHour: ratioObj.endHour, carbBolus, correction, total, rounded };
+        return { ratio, label: ratioObj.label, carbBolus, correction, total, rounded };
     });
 
-    renderRatioResults(results, timeActiveIdx);
+    renderRatioResults(results);
     renderHistory();
 }
 
@@ -214,15 +189,13 @@ function updateSumBadge(input, badge, suffix) {
 }
 
 // --- Ratio Results Rendering ---
-function renderRatioResults(results, timeActiveIdx) {
+function renderRatioResults(results) {
     el.ratioResults.innerHTML = results.map((r, i) => {
         const isSelected = i === selectedRatioIndex;
-        const isTimeActive = i === timeActiveIdx;
         let classes = 'ratio-row';
         if (isSelected) classes += ' selected';
-        if (isTimeActive) classes += ' time-active';
 
-        const labelHtml = r.label ? `<span class="ratio-time-label">${r.label}</span>` : '';
+        const labelHtml = r.label ? `<span class="ratio-label">${r.label}</span>` : '';
 
         return `
         <div class="${classes}" data-index="${i}">
@@ -436,13 +409,6 @@ function renderSettingsRatios() {
                    value="${r.ratio}" data-ratio-idx="${i}" class="s-ratio-input">
             <input type="text" placeholder="Label" maxlength="20"
                    value="${r.label || ''}" data-label-idx="${i}" class="s-ratio-label">
-            <div class="ratio-time-inputs">
-                <input type="number" inputmode="numeric" min="0" max="23" placeholder="From"
-                       value="${r.startHour != null ? r.startHour : ''}" data-start-idx="${i}" class="s-ratio-time">
-                <span class="ratio-time-sep">-</span>
-                <input type="number" inputmode="numeric" min="0" max="23" placeholder="To"
-                       value="${r.endHour != null ? r.endHour : ''}" data-end-idx="${i}" class="s-ratio-time">
-            </div>
             <span class="ratio-suffix">g/u</span>
             <button class="ratio-remove" data-s-remove="${i}" title="Remove">&times;</button>
         </div>
@@ -472,16 +438,12 @@ document.getElementById('settingsSaveBtn').addEventListener('click', () => {
     // Read ratios from form
     const ratioInputs = document.querySelectorAll('.s-ratio-input');
     const labelInputs = document.querySelectorAll('.s-ratio-label');
-    const startInputs = document.querySelectorAll('[data-start-idx]');
-    const endInputs = document.querySelectorAll('[data-end-idx]');
     const newRatios = [];
     ratioInputs.forEach((input, i) => {
         const val = parseFloat(input.value);
         if (val > 0) {
             const label = labelInputs[i] ? labelInputs[i].value.trim() : '';
-            const startHour = startInputs[i] && startInputs[i].value !== '' ? parseInt(startInputs[i].value) : null;
-            const endHour = endInputs[i] && endInputs[i].value !== '' ? parseInt(endInputs[i].value) : null;
-            newRatios.push({ ratio: val, label, startHour, endHour });
+            newRatios.push({ ratio: val, label });
         }
     });
     if (newRatios.length > 0) {
@@ -541,7 +503,7 @@ document.getElementById('sInsulinType').addEventListener('change', (e) => {
 document.getElementById('sAddRatio').addEventListener('click', () => {
     if (ratios.length < 6) {
         const lastRatio = ratios[ratios.length - 1].ratio;
-        ratios.push({ ratio: lastRatio + 2 || 10, label: '', startHour: null, endHour: null });
+        ratios.push({ ratio: lastRatio + 2 || 10, label: '' });
         renderSettingsRatios();
     }
 });
@@ -568,7 +530,7 @@ document.getElementById('settingsResetBtn').addEventListener('click', () => {
 let wizardStep = 1;
 const WIZARD_STEPS = 7;
 let wizardUnit = 'mmol';
-let wizardRatios = [{ ratio: 10, label: '', startHour: null, endHour: null }];
+let wizardRatios = [{ ratio: 10, label: '' }];
 let wizardDiaMode = 'preset';
 let wizardDiaValue = 4;
 
@@ -577,7 +539,7 @@ function openWizard() {
     wizardUnit = settings.units || 'mmol';
     wizardRatios = settings.setupComplete && ratios.length
         ? ratios.map(r => ({ ...r }))
-        : [{ ratio: 10, label: '', startHour: null, endHour: null }];
+        : [{ ratio: 10, label: '' }];
     wizardDiaMode = [3, 4, 5].includes(settings.dia) ? 'preset' : 'custom';
     wizardDiaValue = settings.dia || 4;
 
@@ -706,9 +668,9 @@ document.getElementById('wizardNextBtn').addEventListener('click', () => {
         inputs.forEach((input, i) => {
             const val = parseFloat(input.value);
             const label = labels[i] ? labels[i].value.trim() : '';
-            if (val > 0) wizardRatios.push({ ratio: val, label, startHour: null, endHour: null });
+            if (val > 0) wizardRatios.push({ ratio: val, label });
         });
-        if (wizardRatios.length === 0) wizardRatios = [{ ratio: 10, label: '', startHour: null, endHour: null }];
+        if (wizardRatios.length === 0) wizardRatios = [{ ratio: 10, label: '' }];
     }
 
     if (wizardStep === 4) {
@@ -819,7 +781,7 @@ document.getElementById('wInsulinType').addEventListener('change', (e) => {
 document.getElementById('wAddRatio').addEventListener('click', () => {
     if (wizardRatios.length < 6) {
         const lastRatio = wizardRatios[wizardRatios.length - 1].ratio;
-        wizardRatios.push({ ratio: lastRatio + 2 || 10, label: '', startHour: null, endHour: null });
+        wizardRatios.push({ ratio: lastRatio + 2 || 10, label: '' });
         renderWizardRatios();
     }
 });
