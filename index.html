@@ -21,11 +21,14 @@
             </div>
         </section>
 
-        <!-- Carb Input with Sum Badge -->
+        <!-- Carb Input with Sum Badge + Plus Button -->
         <section class="card">
             <div class="field">
                 <label for="carbs">Carbs <span class="hint">use + to add up, e.g. 5+3+10</span></label>
-                <input type="text" id="carbs" inputmode="decimal" placeholder="0">
+                <div class="input-with-btn">
+                    <input type="text" id="carbs" inputmode="decimal" placeholder="0">
+                    <button type="button" id="carbsPlusBtn" class="plus-btn" aria-label="Append plus">+</button>
+                </div>
                 <span class="sum-badge" id="carbsSum"></span>
             </div>
         </section>

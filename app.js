@@ -224,6 +224,16 @@ el.addBolusBtn.addEventListener('click', () => {
     }
 });
 
+// Plus button: append "+" to carbs input (no stacking)
+document.getElementById('carbsPlusBtn').addEventListener('click', () => {
+    const input = el.carbs;
+    const val = input.value;
+    if (val.length > 0 && !val.endsWith('+')) {
+        input.value = val + '+';
+        input.focus();
+    }
+});
+
 // Enter key to finalize math expressions
 [el.currentBg, el.carbs].forEach(input => {
     input.addEventListener('keydown', (e) => {
