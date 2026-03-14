@@ -234,6 +234,17 @@ document.getElementById('carbsPlusBtn').addEventListener('click', () => {
     }
 });
 
+// Filter inputs: strip invalid characters as user types
+el.carbs.addEventListener('input', () => {
+    const cleaned = el.carbs.value.replace(/[^\d.+]/g, '');
+    if (cleaned !== el.carbs.value) el.carbs.value = cleaned;
+});
+
+el.currentBg.addEventListener('input', () => {
+    const cleaned = el.currentBg.value.replace(/[^\d.]/g, '');
+    if (cleaned !== el.currentBg.value) el.currentBg.value = cleaned;
+});
+
 // Enter key to finalize math expressions
 [el.currentBg, el.carbs].forEach(input => {
     input.addEventListener('keydown', (e) => {
