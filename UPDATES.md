@@ -1,5 +1,47 @@
 # BolusCalc Updates
 
+## 2026-03-14 (v4)
+
+### Critical fixes
+- Service worker now registered in both `index.html` and `calculator.html` -- offline mode actually works
+- Replaced placeholder PWA icons (via.placeholder.com) with proper mint green bulb icons (192x192 and 512x512 PNGs)
+- Fixed manifest colors: `background_color` and `theme_color` both set to `#1D9E75` (was dark blue `#2c3e50`)
+- Service worker bumped to v4, caches new icon files, cleans up old caches on activation
+
+### IOB accuracy: curve-based absorption model
+- Replaced linear IOB decay with Walsh/exponential model (same as Loop/OpenAPS)
+- Added `INSULIN_PROFILES` lookup table with insulin-specific peak times and default DIA values
+- Supported insulins: NovoRapid, Humalog, Apidra, Admelog (standard rapid, peak ~1.25h), Fiasp (ultra-rapid, peak 0.6h), Lyumjev (ultra-rapid, peak 0.5h)
+- IOB curve formula uses time constant `tau` derived from peak time, producing realistic rise-peak-tail pharmacokinetics
+- "Other rapid-acting" fallback uses standard rapid parameters
+- Insulin type dropdown now shows absorption speed labels (e.g. "Fiasp (Ultra-rapid)")
+- Changing insulin type suggests updating DIA to match the insulin's default
+
+### Time-aware carb ratios
+- Ratios now stored as objects with `ratio`, `label`, `startHour`, and `endHour` fields
+- Automatic migration: existing plain number arrays converted to new format on load
+- Current time-of-day ratio auto-highlighted in the results view
+- Settings: each ratio row now has a label input and optional start/end hour fields
+- Wizard: ratio rows include a label input for naming (e.g. "Breakfast", "Lunch")
+
+### Branding and trust
+- Calculator header updated: "BolusCalc" (one word) with logo icon and back-link to landing page
+- Landing page: new "About the developer" section before the footer
+- Consistent naming across all pages
+
+### Accessibility
+- Removed `maximum-scale=1.0, user-scalable=no` from calculator viewport -- pinch-to-zoom now works
+- Landing page: replaced `div.section-title` with semantic `<h2>`, feature/step titles with `<h3>`
+- Added `aria-hidden="true"` to all decorative SVGs on the landing page
+
+### Calculator UX
+- Empty history state: shows "No boluses logged yet" instead of blank space
+- Removed "+ Add Ratio" button from main calculator screen (ratio management consolidated in Settings only)
+- Inline ratio editing still works on the main screen for quick tweaks
+- Helper text added to insulin type dropdown: "Used to calculate how quickly your insulin is absorbed"
+
+---
+
 ## 2026-03-14
 
 ### Landing page

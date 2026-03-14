@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bolus-calc-v3';
+const CACHE_NAME = 'bolus-calc-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -6,12 +6,22 @@ const ASSETS = [
   './style.css',
   './landing.css',
   './app.js',
-  './manifest.json'
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+  );
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
   );
 });
 
