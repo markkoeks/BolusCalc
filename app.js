@@ -104,6 +104,7 @@ const el = {
 function solve(str) {
     if (!str || typeof str !== 'string') return 0;
     try {
+        str = str.replace(/,/g, '.');
         const clean = str.replace(/[^-()\d/*+.]/g, '');
         if (!clean) return 0;
         const result = Function(`'use strict'; return (${clean})`)();
@@ -308,12 +309,12 @@ document.getElementById('carbsPlusBtn').addEventListener('click', () => {
 
 // Filter inputs: strip invalid characters as user types
 el.carbs.addEventListener('input', () => {
-    const cleaned = el.carbs.value.replace(/[^\d.+]/g, '');
+    const cleaned = el.carbs.value.replace(/,/g, '.').replace(/[^\d.+]/g, '');
     if (cleaned !== el.carbs.value) el.carbs.value = cleaned;
 });
 
 el.currentBg.addEventListener('input', () => {
-    const cleaned = el.currentBg.value.replace(/[^\d.]/g, '');
+    const cleaned = el.currentBg.value.replace(/,/g, '.').replace(/[^\d.]/g, '');
     if (cleaned !== el.currentBg.value) el.currentBg.value = cleaned;
 });
 
