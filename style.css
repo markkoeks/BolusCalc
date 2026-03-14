@@ -838,6 +838,18 @@ select:focus {
     text-decoration: underline;
 }
 
+.feedback-link {
+    font-size: 0.65rem;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.feedback-link a {
+    color: var(--text-secondary);
+    opacity: 0.6;
+    text-decoration: none;
+}
+
 /* Disclaimer Modal */
 .modal-backdrop {
     position: fixed;
