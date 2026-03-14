@@ -14,6 +14,21 @@
     --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
 }
 
+[data-theme="dark"] {
+    --bg: #141716;
+    --card: #1E2321;
+    --text: #E4E4E1;
+    --text-secondary: #9A9A96;
+    --label: #3DB88E;
+    --accent: #25B885;
+    --accent-light: #0D2E24;
+    --accent-dark: #B8E8D4;
+    --border: #1E5E45;
+    --input-bg: #242824;
+    --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.15);
+    color-scheme: dark;
+}
+
 * { box-sizing: border-box; touch-action: manipulation; margin: 0; padding: 0; }
 
 body {
@@ -66,9 +81,16 @@ header h1 {
     justify-content: center;
 }
 
-.header-settings-btn {
+.header-right {
     position: absolute;
     right: 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.header-theme-btn,
+.header-settings-btn {
     background: none;
     border: none;
     color: var(--accent);
@@ -79,8 +101,32 @@ header h1 {
     align-items: center;
 }
 
+.header-theme-btn:active,
 .header-settings-btn:active {
     background: var(--accent-light);
+}
+
+/* Dark mode overrides for hardcoded colors */
+[data-theme="dark"] .modal-card {
+    background: var(--card);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .modal-backdrop {
+    background: rgba(0,0,0,0.7);
+}
+
+[data-theme="dark"] .reset-settings-btn {
+    border-color: #d44;
+    color: #f66;
+}
+
+[data-theme="dark"] .reset-settings-btn:active {
+    background: #2a1515;
+}
+
+[data-theme="dark"] .ratio-remove:hover {
+    color: #f66;
 }
 
 /* Cards */

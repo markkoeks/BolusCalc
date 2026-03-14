@@ -1,3 +1,23 @@
+// --- Dark Mode ---
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    const isDark = theme === 'dark';
+    document.getElementById('themeIconLight').style.display = isDark ? 'none' : '';
+    document.getElementById('themeIconDark').style.display = isDark ? '' : 'none';
+    // Update theme-color meta for mobile browser chrome
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = isDark ? '#141716' : '#1D9E75';
+}
+
+// Apply saved theme immediately (before DOM renders)
+(function() {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+})();
+
 // --- Insulin Profiles ---
 const INSULIN_PROFILES = {
     NovoRapid: { peak: 1.25, defaultDia: 4 },
@@ -935,7 +955,19 @@ window.addEventListener('appinstalled', () => {
 });
 
 // --- Init ---
+
+// Theme toggle button
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
 window.addEventListener('load', () => {
+    // Apply theme with icon state
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+
     el.manualUnits.value = localStorage.getItem('manualUnits') || '';
     el.manualHoursAgo.value = localStorage.getItem('manualHoursAgo') || '';
 
