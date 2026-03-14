@@ -707,6 +707,24 @@ document.getElementById('settingsRunWizardBtn').addEventListener('click', () => 
     openWizard();
 });
 
+// --- Disclaimer ---
+document.getElementById('disclaimerAcceptBtn').addEventListener('click', () => {
+    localStorage.setItem('disclaimerAccepted', 'true');
+    document.getElementById('disclaimerModal').classList.add('hidden');
+    // Now proceed to wizard
+    openWizard();
+});
+
+// Full disclaimer overlay (accessible from footer link)
+document.getElementById('disclaimerLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('disclaimerOverlay').classList.remove('hidden');
+});
+
+document.getElementById('disclaimerBack').addEventListener('click', () => {
+    document.getElementById('disclaimerOverlay').classList.add('hidden');
+});
+
 // --- Init ---
 window.addEventListener('load', () => {
     el.manualUnits.value = localStorage.getItem('manualUnits') || '';
@@ -722,10 +740,12 @@ window.addEventListener('load', () => {
     updateSettingsSummary();
     calculate();
 
-    // Show wizard or banner on launch
+    // First launch: show disclaimer before wizard
     if (!settings.setupComplete) {
         if (localStorage.getItem('wizardSkipped') === 'true') {
             showSetupBanner();
+        } else if (localStorage.getItem('disclaimerAccepted') !== 'true') {
+            document.getElementById('disclaimerModal').classList.remove('hidden');
         } else {
             openWizard();
         }

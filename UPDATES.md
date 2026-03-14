@@ -27,3 +27,9 @@
 - Banner is tappable to resume wizard, or dismissible via X button
 - Re-entrant: "Redo Setup Wizard" button in the settings screen
 - Pre-populates current values when re-entering the wizard
+
+### Medical disclaimer
+- One-time disclaimer modal shown on first launch (before onboarding wizard) with "I understand" confirmation
+- Footer note is now tappable -- opens a full About screen with the complete disclaimer and app description
+- About screen also explains that all data is stored locally (no server)
+- Disclaimer acceptance persisted in localStorage so it only shows once
