@@ -4,6 +4,16 @@ let selectedRatioIndex = parseInt(localStorage.getItem('selectedRatioIndex')) ||
 let bolusHistory = JSON.parse(localStorage.getItem('bolusHistory')) || [];
 let iobMode = localStorage.getItem('iobMode') || 'auto';
 
+// User settings (persisted to localStorage)
+const settings = {
+    units: localStorage.getItem('units') || 'mmol',
+    targetBg: parseFloat(localStorage.getItem('targetBg')) || 5.5,
+    isf: parseFloat(localStorage.getItem('isf')) || 2.0,
+    dia: parseFloat(localStorage.getItem('dia')) || 4,
+    insulinType: localStorage.getItem('insulinType') || '',
+    setupComplete: localStorage.getItem('setupComplete') === 'true'
+};
+
 // Migration from old single carbRatio
 if (!ratios) {
     const oldRatio = parseFloat(localStorage.getItem('carbRatio'));
@@ -21,9 +31,6 @@ const el = {
     carbs: document.getElementById('carbs'),
     bgSum: document.getElementById('bgSum'),
     carbsSum: document.getElementById('carbsSum'),
-    targetBg: document.getElementById('targetBg'),
-    isf: document.getElementById('isf'),
-    dia: document.getElementById('dia'),
     iobValueAuto: document.getElementById('iobValueAuto'),
     iobValueManual: document.getElementById('iobValueManual'),
     iobAutoPanel: document.getElementById('iobAutoPanel'),
@@ -34,6 +41,12 @@ const el = {
     addRatioBtn: document.getElementById('addRatioBtn'),
     historyList: document.getElementById('historyList'),
     addBolusBtn: document.getElementById('addBolusBtn'),
+    // Settings summary
+    settingsSummary: document.getElementById('settingsSummary'),
+    summaryTarget: document.getElementById('summaryTarget'),
+    summaryIsf: document.getElementById('summaryIsf'),
+    summaryDia: document.getElementById('summaryDia'),
+    summaryUnits: document.getElementById('summaryUnits'),
 };
 
 // --- Math evaluator (YNAB-style) ---
@@ -51,7 +64,7 @@ function solve(str) {
 
 // --- IOB Calculations ---
 function calculateHistoryIOB() {
-    const diaHours = parseFloat(el.dia.value) || 4;
+    const diaHours = settings.dia || 4;
     const now = Date.now();
     let totalIOB = 0;
 
@@ -70,7 +83,7 @@ function calculateHistoryIOB() {
 function calculateManualIOB() {
     const units = parseFloat(el.manualUnits.value) || 0;
     const hoursAgo = parseFloat(el.manualHoursAgo.value) || 0;
-    const diaHours = parseFloat(el.dia.value) || 4;
+    const diaHours = settings.dia || 4;
 
     if (units <= 0 || hoursAgo >= diaHours) return 0;
     return (units / diaHours) * (diaHours - hoursAgo);
@@ -80,8 +93,8 @@ function calculateManualIOB() {
 function calculate() {
     const bg = solve(el.currentBg.value);
     const carbs = solve(el.carbs.value);
-    const target = parseFloat(el.targetBg.value) || 0;
-    const isf = parseFloat(el.isf.value) || 1;
+    const target = settings.targetBg;
+    const isf = settings.isf || 1;
 
     // IOB
     const historyIOB = calculateHistoryIOB();
@@ -207,8 +220,8 @@ el.addBolusBtn.addEventListener('click', () => {
     const results = ratios.map(ratio => {
         const bg = solve(el.currentBg.value);
         const carbs = solve(el.carbs.value);
-        const target = parseFloat(el.targetBg.value) || 0;
-        const isf = parseFloat(el.isf.value) || 1;
+        const target = settings.targetBg;
+        const isf = settings.isf || 1;
         const iob = iobMode === 'manual' ? calculateManualIOB() : calculateHistoryIOB();
         const carbBolus = ratio > 0 ? carbs / ratio : 0;
         const correction = bg > target ? (bg - target) / isf : 0;
@@ -259,10 +272,6 @@ el.currentBg.addEventListener('input', () => {
 
 // Real-time calculation on any input
 document.body.addEventListener('input', (e) => {
-    const settingsIds = ['targetBg', 'isf', 'dia'];
-    if (settingsIds.includes(e.target.id)) {
-        localStorage.setItem(e.target.id, e.target.value);
-    }
     // Manual IOB fields
     if (e.target.id === 'manualUnits') localStorage.setItem('manualUnits', e.target.value);
     if (e.target.id === 'manualHoursAgo') localStorage.setItem('manualHoursAgo', e.target.value);
@@ -287,11 +296,301 @@ function saveRatios() {
     localStorage.setItem('selectedRatioIndex', selectedRatioIndex);
 }
 
+function saveSettings() {
+    localStorage.setItem('units', settings.units);
+    localStorage.setItem('targetBg', settings.targetBg);
+    localStorage.setItem('isf', settings.isf);
+    localStorage.setItem('dia', settings.dia);
+    localStorage.setItem('insulinType', settings.insulinType);
+    localStorage.setItem('setupComplete', settings.setupComplete);
+}
+
+function updateSettingsSummary() {
+    const unitStr = settings.units === 'mmol' ? 'mmol/L' : 'mg/dL';
+    el.summaryTarget.textContent = settings.targetBg;
+    el.summaryIsf.textContent = settings.isf;
+    el.summaryDia.textContent = settings.dia + 'h';
+    el.summaryUnits.textContent = unitStr;
+}
+
+function updateUnitLabels() {
+    const unitStr = settings.units === 'mmol' ? 'mmol/L' : 'mg/dL';
+    document.querySelectorAll('.unit-label').forEach(el => el.textContent = unitStr);
+    document.querySelectorAll('.unit-label-per').forEach(el => el.textContent = unitStr + '/unit');
+}
+
+// --- Settings Screen ---
+function openSettings() {
+    const overlay = document.getElementById('settingsOverlay');
+    // Populate form with current values
+    document.getElementById('sTargetBg').value = settings.targetBg;
+    document.getElementById('sIsf').value = settings.isf;
+    document.getElementById('sDia').value = settings.dia;
+    document.getElementById('sInsulinType').value = settings.insulinType;
+
+    // Set active unit button
+    document.querySelectorAll('#settingsUnitToggle .unit-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.unit === settings.units);
+    });
+
+    renderSettingsRatios();
+    updateUnitLabels();
+    overlay.classList.remove('hidden');
+}
+
+function closeSettings() {
+    document.getElementById('settingsOverlay').classList.add('hidden');
+}
+
+function renderSettingsRatios() {
+    const container = document.getElementById('sRatioList');
+    container.innerHTML = ratios.map((r, i) => `
+        <div class="settings-ratio-row">
+            <input type="number" inputmode="decimal" step="1" min="1" max="50"
+                   value="${r}" data-ratio-idx="${i}" class="s-ratio-input">
+            <span class="ratio-suffix">g/unit</span>
+            <button class="ratio-remove" data-s-remove="${i}" title="Remove">&times;</button>
+        </div>
+    `).join('');
+}
+
+// Settings event listeners
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+document.getElementById('settingsBack').addEventListener('click', closeSettings);
+el.settingsSummary.addEventListener('click', openSettings);
+
+document.getElementById('settingsSaveBtn').addEventListener('click', () => {
+    // Read values from form
+    const activeUnit = document.querySelector('#settingsUnitToggle .unit-btn.active');
+    settings.units = activeUnit ? activeUnit.dataset.unit : 'mmol';
+    settings.targetBg = parseFloat(document.getElementById('sTargetBg').value) || 5.5;
+    settings.isf = parseFloat(document.getElementById('sIsf').value) || 2.0;
+    settings.dia = parseFloat(document.getElementById('sDia').value) || 4;
+    settings.insulinType = document.getElementById('sInsulinType').value;
+
+    // Validate
+    if (settings.targetBg <= 0 || settings.isf <= 0 || settings.dia < 2 || settings.dia > 8) {
+        alert('Please check your values. Target and ISF must be positive. DIA must be 2-8 hours.');
+        return;
+    }
+
+    // Read ratios from form
+    const ratioInputs = document.querySelectorAll('.s-ratio-input');
+    const newRatios = [];
+    ratioInputs.forEach(input => {
+        const val = parseFloat(input.value);
+        if (val > 0) newRatios.push(val);
+    });
+    if (newRatios.length > 0) {
+        ratios.length = 0;
+        newRatios.forEach(r => ratios.push(r));
+        if (selectedRatioIndex >= ratios.length) selectedRatioIndex = 0;
+        saveRatios();
+    }
+
+    saveSettings();
+    updateSettingsSummary();
+    calculate();
+    closeSettings();
+});
+
+// Unit toggle in settings
+document.getElementById('settingsUnitToggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('.unit-btn');
+    if (!btn) return;
+    document.querySelectorAll('#settingsUnitToggle .unit-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Convert existing values when switching units
+    const oldUnit = settings.units;
+    const newUnit = btn.dataset.unit;
+    if (oldUnit !== newUnit) {
+        const targetInput = document.getElementById('sTargetBg');
+        const isfInput = document.getElementById('sIsf');
+        if (newUnit === 'mgdl') {
+            targetInput.value = Math.round(parseFloat(targetInput.value) * 18) || '';
+            isfInput.value = Math.round(parseFloat(isfInput.value) * 18) || '';
+        } else {
+            targetInput.value = (parseFloat(targetInput.value) / 18).toFixed(1) || '';
+            isfInput.value = (parseFloat(isfInput.value) / 18).toFixed(1) || '';
+        }
+        // Temporarily update settings.units so labels update correctly
+        settings.units = newUnit;
+        updateUnitLabels();
+    }
+});
+
+// Ratio add/remove in settings
+document.getElementById('sAddRatio').addEventListener('click', () => {
+    if (ratios.length < 6) {
+        ratios.push(ratios[ratios.length - 1] + 2 || 10);
+        renderSettingsRatios();
+    }
+});
+
+document.getElementById('sRatioList').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-s-remove]');
+    if (btn && ratios.length > 1) {
+        const idx = parseInt(btn.dataset.sRemove);
+        ratios.splice(idx, 1);
+        if (selectedRatioIndex >= ratios.length) selectedRatioIndex = ratios.length - 1;
+        renderSettingsRatios();
+    }
+});
+
+// Reset all settings
+document.getElementById('settingsResetBtn').addEventListener('click', () => {
+    if (confirm('Reset all settings to defaults? This cannot be undone.')) {
+        localStorage.clear();
+        location.reload();
+    }
+});
+
+// --- First Launch Wizard ---
+let wizardStep = 1;
+const WIZARD_STEPS = 4;
+let wizardUnit = 'mmol';
+let wizardRatios = [10];
+
+function openWizard() {
+    wizardStep = 1;
+    wizardUnit = 'mmol';
+    wizardRatios = [10];
+    renderWizardStep();
+    renderWizardRatios();
+    document.getElementById('wizardOverlay').classList.remove('hidden');
+}
+
+function closeWizard() {
+    document.getElementById('wizardOverlay').classList.add('hidden');
+}
+
+function renderWizardStep() {
+    document.querySelectorAll('.wizard-step').forEach(step => {
+        step.classList.toggle('active', parseInt(step.dataset.step) === wizardStep);
+    });
+    document.getElementById('wizardProgressBar').style.width = (wizardStep / WIZARD_STEPS * 100) + '%';
+    document.getElementById('wizardBackBtn').style.visibility = wizardStep === 1 ? 'hidden' : 'visible';
+    document.getElementById('wizardNextBtn').textContent = wizardStep === WIZARD_STEPS ? 'Done' : 'Next';
+
+    // Update unit labels in wizard
+    const unitStr = wizardUnit === 'mmol' ? 'mmol/L' : 'mg/dL';
+    document.querySelectorAll('#wizardOverlay .unit-label').forEach(el => el.textContent = unitStr);
+    document.querySelectorAll('#wizardOverlay .unit-label-per').forEach(el => el.textContent = unitStr + '/unit');
+
+    // Set default placeholders based on units
+    if (wizardUnit === 'mgdl') {
+        const tInput = document.getElementById('wTargetBg');
+        const iInput = document.getElementById('wIsf');
+        if (tInput && !tInput.value) tInput.placeholder = '100';
+        if (iInput && !iInput.value) iInput.placeholder = '45';
+    } else {
+        const tInput = document.getElementById('wTargetBg');
+        const iInput = document.getElementById('wIsf');
+        if (tInput && !tInput.value) tInput.placeholder = '5.5';
+        if (iInput && !iInput.value) iInput.placeholder = '2.5';
+    }
+}
+
+function renderWizardRatios() {
+    const container = document.getElementById('wRatioList');
+    container.innerHTML = wizardRatios.map((r, i) => `
+        <div class="settings-ratio-row">
+            <input type="number" inputmode="decimal" step="1" min="1" max="50"
+                   value="${r}" data-w-ratio-idx="${i}" class="w-ratio-input">
+            <span class="ratio-suffix">g/unit</span>
+            ${wizardRatios.length > 1 ? `<button class="ratio-remove" data-w-remove="${i}" title="Remove">&times;</button>` : ''}
+        </div>
+    `).join('');
+}
+
+// Wizard navigation
+document.getElementById('wizardNextBtn').addEventListener('click', () => {
+    // Validate current step
+    if (wizardStep === 2) {
+        const t = parseFloat(document.getElementById('wTargetBg').value);
+        const i = parseFloat(document.getElementById('wIsf').value);
+        if (!t || t <= 0) {
+            document.getElementById('wTargetBg').focus();
+            return;
+        }
+        if (!i || i <= 0) {
+            document.getElementById('wIsf').focus();
+            return;
+        }
+    }
+
+    if (wizardStep === 3) {
+        // Read ratios from wizard inputs
+        const inputs = document.querySelectorAll('.w-ratio-input');
+        wizardRatios = [];
+        inputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (val > 0) wizardRatios.push(val);
+        });
+        if (wizardRatios.length === 0) wizardRatios = [10];
+    }
+
+    if (wizardStep < WIZARD_STEPS) {
+        wizardStep++;
+        renderWizardStep();
+    } else {
+        // Finish: save all wizard values
+        settings.units = wizardUnit;
+        settings.targetBg = parseFloat(document.getElementById('wTargetBg').value) || 5.5;
+        settings.isf = parseFloat(document.getElementById('wIsf').value) || 2.0;
+        settings.dia = parseFloat(document.getElementById('wDia').value) || 4;
+        settings.insulinType = document.getElementById('wInsulinType').value;
+        settings.setupComplete = true;
+
+        // Save ratios from wizard
+        ratios.length = 0;
+        wizardRatios.forEach(r => ratios.push(r));
+        selectedRatioIndex = 0;
+        saveRatios();
+        saveSettings();
+        updateSettingsSummary();
+        calculate();
+        closeWizard();
+    }
+});
+
+document.getElementById('wizardBackBtn').addEventListener('click', () => {
+    if (wizardStep > 1) {
+        wizardStep--;
+        renderWizardStep();
+    }
+});
+
+// Wizard unit toggle
+document.getElementById('wizardUnitToggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('.unit-btn');
+    if (!btn) return;
+    document.querySelectorAll('#wizardUnitToggle .unit-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    wizardUnit = btn.dataset.unit;
+    renderWizardStep();
+});
+
+// Wizard ratio add/remove
+document.getElementById('wAddRatio').addEventListener('click', () => {
+    if (wizardRatios.length < 6) {
+        wizardRatios.push(wizardRatios[wizardRatios.length - 1] + 2 || 10);
+        renderWizardRatios();
+    }
+});
+
+document.getElementById('wRatioList').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-w-remove]');
+    if (btn && wizardRatios.length > 1) {
+        const idx = parseInt(btn.dataset.wRemove);
+        wizardRatios.splice(idx, 1);
+        renderWizardRatios();
+    }
+});
+
 // --- Init ---
 window.addEventListener('load', () => {
-    el.targetBg.value = localStorage.getItem('targetBg') || 5.5;
-    el.isf.value = localStorage.getItem('isf') || 2.0;
-    el.dia.value = localStorage.getItem('dia') || 4;
     el.manualUnits.value = localStorage.getItem('manualUnits') || '';
     el.manualHoursAgo.value = localStorage.getItem('manualHoursAgo') || '';
 
@@ -302,5 +601,11 @@ window.addEventListener('load', () => {
         el.iobManualPanel.style.display = '';
     }
 
+    updateSettingsSummary();
     calculate();
+
+    // Show wizard on first launch
+    if (!settings.setupComplete) {
+        openWizard();
+    }
 });
