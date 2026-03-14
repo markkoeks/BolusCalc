@@ -2,6 +2,14 @@
 
 ## 2026-03-14
 
+### Landing page
+- New public-facing landing page at the root URL (`index.html`)
+- Calculator moved to `calculator.html`
+- Sections: hero with CTAs, authenticity band, feature grid, how-it-works steps, privacy note, install instructions, feedback link, disclaimer
+- Separate `landing.css` stylesheet to keep calculator bundle lean
+- PWA `start_url` updated to `calculator.html` so installed app opens directly to the calculator
+- Service worker cache bumped to v3, now caches both pages and both stylesheets
+
 ### Input validation — carbs and BG fields
 - Carbs field now only accepts digits, `.`, and `+` (for math expressions)
 - BG field only accepts digits and `.`

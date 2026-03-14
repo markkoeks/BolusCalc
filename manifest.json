@@ -1,7 +1,7 @@
 {
   "name": "Bolus Calculator",
   "short_name": "BolusCalc",
-  "start_url": "./index.html",
+  "start_url": "./calculator.html",
   "display": "standalone",
   "background_color": "#2c3e50",
   "theme_color": "#2c3e50",

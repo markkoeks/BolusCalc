@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bolus Calc</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1D9E75">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bolus Calc</h1>
+            <button id="settingsBtn" class="header-settings-btn" aria-label="Settings">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.48.48 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>
+            </button>
+        </header>
+
+        <!-- Setup incomplete banner -->
+        <div id="setupBanner" class="setup-banner hidden">
+            <span>Setup incomplete -- tap to finish configuring your settings.</span>
+            <button id="setupBannerDismiss" class="setup-banner-dismiss" aria-label="Dismiss">&times;</button>
+        </div>
+
+        <!-- BG Input -->
+        <section class="card">
+            <div class="field">
+                <label for="currentBg">Current BG</label>
+                <input type="text" id="currentBg" inputmode="decimal" placeholder="0" autofocus>
+                <span class="sum-badge" id="bgSum"></span>
+            </div>
+        </section>
+
+        <!-- Carb Input with Sum Badge + Plus Button -->
+        <section class="card">
+            <div class="field">
+                <label for="carbs">Carbs <span class="hint">use + to add up, e.g. 5+3+10</span></label>
+                <div class="input-with-btn">
+                    <input type="text" id="carbs" inputmode="decimal" placeholder="0">
+                    <button type="button" id="carbsPlusBtn" class="plus-btn" aria-label="Append plus">+</button>
+                </div>
+                <span class="sum-badge" id="carbsSum"></span>
+            </div>
+        </section>
+
+        <!-- IOB Section -->
+        <section class="card">
+            <label class="section-label">Insulin On Board (IOB)</label>
+            <div class="iob-toggle">
+                <input type="radio" name="iobMode" id="iobAuto" value="auto" checked>
+                <label for="iobAuto">Auto</label>
+                <input type="radio" name="iobMode" id="iobManual" value="manual">
+                <label for="iobManual">Manual</label>
+            </div>
+            <div id="iobAutoPanel" class="iob-panel">
+                <div class="iob-value">
+                    <span>From history:</span>
+                    <strong id="iobValueAuto">0.00 u</strong>
+                </div>
+            </div>
+            <div id="iobManualPanel" class="iob-panel" style="display:none;">
+                <div class="field-row">
+                    <div class="field-half">
+                        <label for="manualUnits">Units given</label>
+                        <input type="number" id="manualUnits" inputmode="decimal" step="0.5" placeholder="0">
+                    </div>
+                    <div class="field-half">
+                        <label for="manualHoursAgo">Hours ago</label>
+                        <input type="number" id="manualHoursAgo" inputmode="decimal" step="0.5" placeholder="0">
+                    </div>
+                </div>
+                <div class="iob-value">
+                    <span>Remaining:</span>
+                    <strong id="iobValueManual">0.00 u</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ratio Results (centerpiece) -->
+        <section class="card results-card">
+            <label class="section-label">Bolus by Ratio</label>
+            <div class="ratio-header">
+                <span class="ratio-col-label">Ratio</span>
+                <span class="ratio-col-label">Carb</span>
+                <span class="ratio-col-label">Corr</span>
+                <span class="ratio-col-label">Total</span>
+                <span class="ratio-col-label ratio-col-action"></span>
+            </div>
+            <div id="ratioResults"></div>
+            <button id="addRatioBtn" class="add-ratio-btn">+ Add Ratio</button>
+        </section>
+
+        <!-- Settings summary (read-only, tap to open full settings) -->
+        <section class="card settings-summary" id="settingsSummary">
+            <label class="section-label">Settings</label>
+            <div class="settings-summary-grid">
+                <div class="summary-item"><span class="summary-label">Target</span><span class="summary-value" id="summaryTarget">5.5</span></div>
+                <div class="summary-item"><span class="summary-label">ISF</span><span class="summary-value" id="summaryIsf">2.0</span></div>
+                <div class="summary-item"><span class="summary-label">DIA</span><span class="summary-value" id="summaryDia">4h</span></div>
+                <div class="summary-item"><span class="summary-label">Units</span><span class="summary-value" id="summaryUnits">mmol/L</span></div>
+            </div>
+        </section>
+
+        <!-- History + Log -->
+        <section class="card">
+            <label class="section-label">Recent Boluses</label>
+            <div id="historyList"></div>
+            <button id="addBolusBtn" class="log-btn">Log This Bolus</button>
+        </section>
+
+        <footer>
+            <button id="resetBtn" class="reset-button">Clear All</button>
+            <p class="disclaimer"><a href="#" id="disclaimerLink">Calculation aid only. Not medical advice.</a></p>
+        </footer>
+
+        <!-- PWA Install Banner -->
+        <div id="installBanner" class="install-banner hidden">
+            <div class="install-banner-content">
+                <span class="install-banner-text">Add to your home screen for the best experience</span>
+                <span class="install-banner-hint" id="installHint"></span>
+            </div>
+            <div class="install-banner-actions">
+                <button id="installBtn" class="install-btn">Install</button>
+                <button id="installDismiss" class="install-dismiss" aria-label="Dismiss">&times;</button>
+            </div>
+        </div>
+    </div>
+    <!-- Settings Overlay -->
+    <div id="settingsOverlay" class="overlay hidden">
+        <div class="overlay-content">
+            <div class="overlay-header">
+                <button id="settingsBack" class="overlay-back" aria-label="Back">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </button>
+                <h2>Settings</h2>
+                <button id="settingsSaveBtn" class="overlay-save">Save</button>
+            </div>
+            <div class="overlay-body">
+                <div class="settings-group">
+                    <h3 class="settings-group-title">Units</h3>
+                    <div class="unit-toggle-row" id="settingsUnitToggle">
+                        <button class="unit-btn" data-unit="mmol">mmol/L</button>
+                        <button class="unit-btn" data-unit="mgdl">mg/dL</button>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3 class="settings-group-title">Targets &amp; Correction</h3>
+                    <div class="field">
+                        <label for="sTargetBg">Target BG <span class="unit-label"></span></label>
+                        <input type="number" id="sTargetBg" inputmode="decimal" step="0.1" min="0">
+                    </div>
+                    <div class="field">
+                        <label for="sIsf">Correction Factor (ISF) <span class="unit-label-per"></span></label>
+                        <input type="number" id="sIsf" inputmode="decimal" step="0.1" min="0">
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3 class="settings-group-title">Insulin-to-Carb Ratios</h3>
+                    <p class="settings-hint">Grams of carbs covered by 1 unit of insulin</p>
+                    <div id="sRatioList"></div>
+                    <button id="sAddRatio" class="add-ratio-btn">+ Add Ratio</button>
+                </div>
+                <div class="settings-group">
+                    <h3 class="settings-group-title">Insulin</h3>
+                    <div class="field">
+                        <label for="sDia">Active Insulin Time (hours)</label>
+                        <input type="number" id="sDia" inputmode="decimal" step="0.5" min="2" max="8">
+                    </div>
+                    <div class="field">
+                        <label for="sInsulinType">Insulin Type</label>
+                        <select id="sInsulinType">
+                            <option value="">Select...</option>
+                            <option value="NovoRapid">NovoRapid (Aspart)</option>
+                            <option value="Humalog">Humalog (Lispro)</option>
+                            <option value="Apidra">Apidra (Glulisine)</option>
+                            <option value="Fiasp">Fiasp</option>
+                            <option value="Lyumjev">Lyumjev</option>
+                            <option value="Admelog">Admelog</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <button id="settingsRunWizardBtn" class="run-wizard-btn">Redo Setup Wizard</button>
+                </div>
+                <div class="settings-group">
+                    <button id="settingsResetBtn" class="reset-settings-btn">Reset All Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- First-launch Disclaimer -->
+    <div id="disclaimerModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <h2>Important Notice</h2>
+            <p>BolusCalc is a calculation aid only. It does not provide medical advice. Always consult your diabetes care team before adjusting your insulin doses. The developer accepts no liability for dosing decisions made using this tool.</p>
+            <button id="disclaimerAcceptBtn" class="modal-accept-btn">I understand</button>
+        </div>
+    </div>
+
+    <!-- Full Disclaimer Overlay -->
+    <div id="disclaimerOverlay" class="overlay hidden">
+        <div class="overlay-content">
+            <div class="overlay-header">
+                <button id="disclaimerBack" class="overlay-back" aria-label="Back">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </button>
+                <h2>About</h2>
+                <div style="width:56px"></div>
+            </div>
+            <div class="settings-group">
+                <h3 class="settings-group-title">Medical Disclaimer</h3>
+                <p class="about-text">BolusCalc is a calculation aid only. It does not provide medical advice. Always consult your diabetes care team before adjusting your insulin doses. The developer accepts no liability for dosing decisions made using this tool.</p>
+            </div>
+            <div class="settings-group">
+                <h3 class="settings-group-title">About BolusCalc</h3>
+                <p class="about-text">BolusCalc helps you calculate insulin bolus doses based on your carbohydrate intake, current blood glucose, and personal insulin parameters. All data is stored locally on your device -- nothing is sent to any server.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- First Launch Wizard -->
+    <div id="wizardOverlay" class="overlay hidden">
+        <div class="overlay-content wizard-content">
+            <div class="wizard-header">
+                <div class="wizard-step-counter" id="wizardStepCounter">Step 1 of 7</div>
+                <div class="wizard-progress">
+                    <div class="wizard-progress-bar" id="wizardProgressBar"></div>
+                </div>
+            </div>
+            <div class="wizard-step active" data-step="1">
+                <h2>Welcome to Bolus Calc</h2>
+                <p>BolusCalc helps you calculate insulin bolus doses based on your personal settings. Let's set those up now -- it takes less than a minute.</p>
+            </div>
+            <div class="wizard-step" data-step="2">
+                <h2>Choose Your Units</h2>
+                <p>Which unit does your glucose meter use?</p>
+                <div class="unit-toggle-row" id="wizardUnitToggle">
+                    <button class="unit-btn active" data-unit="mmol">mmol/L</button>
+                    <button class="unit-btn" data-unit="mgdl">mg/dL</button>
+                </div>
+            </div>
+            <div class="wizard-step" data-step="3">
+                <h2>Carb Ratios</h2>
+                <p class="wizard-helper">Your insulin-to-carb ratio (ICR) tells you how many grams of carbohydrate one unit of insulin covers. For example, a ratio of 10 means 1 unit covers 10g of carbs. Your diabetes team can provide this number.</p>
+                <div id="wRatioList"></div>
+                <button id="wAddRatio" class="add-ratio-btn" style="margin-top:10px">+ Add Ratio</button>
+            </div>
+            <div class="wizard-step" data-step="4">
+                <h2>Correction Factor</h2>
+                <p class="wizard-helper">Your insulin sensitivity factor (ISF) is how much one unit of insulin lowers your blood glucose. For example, an ISF of 2.5 means 1 unit drops your BG by 2.5. Your diabetes team can advise.</p>
+                <div class="field">
+                    <label for="wIsf">Correction Factor (ISF) <span class="unit-label-per"></span></label>
+                    <input type="number" id="wIsf" inputmode="decimal" step="0.1" placeholder="2.5">
+                </div>
+            </div>
+            <div class="wizard-step" data-step="5">
+                <h2>Target Glucose</h2>
+                <p class="wizard-helper">This is the blood glucose level you aim for. The calculator uses it to work out correction doses when your BG is above target.</p>
+                <div class="field">
+                    <label for="wTargetBg">Target BG <span class="unit-label"></span></label>
+                    <input type="number" id="wTargetBg" inputmode="decimal" step="0.1" placeholder="5.5">
+                </div>
+            </div>
+            <div class="wizard-step" data-step="6">
+                <h2>Active Insulin Time</h2>
+                <p class="wizard-helper">Duration of Insulin Action (DIA) is how long your rapid insulin stays active. Most rapid-acting insulins are active for 3-5 hours. Your diabetes team can advise.</p>
+                <div class="dia-presets" id="diaPresets">
+                    <button class="dia-preset-btn" data-dia="3">3h</button>
+                    <button class="dia-preset-btn active" data-dia="4">4h</button>
+                    <button class="dia-preset-btn" data-dia="5">5h</button>
+                    <button class="dia-preset-btn" data-dia="custom">Custom</button>
+                </div>
+                <div class="field dia-custom-field" id="diaCustomField" style="display:none; margin-top:14px">
+                    <label for="wDia">Custom DIA (hours)</label>
+                    <input type="number" id="wDia" inputmode="decimal" step="0.5" min="2" max="8" placeholder="4">
+                </div>
+                <div class="field" style="margin-top:14px">
+                    <label for="wInsulinType">Insulin Type</label>
+                    <select id="wInsulinType">
+                        <option value="">Select...</option>
+                        <option value="NovoRapid">NovoRapid (Aspart)</option>
+                        <option value="Humalog">Humalog (Lispro)</option>
+                        <option value="Apidra">Apidra (Glulisine)</option>
+                        <option value="Fiasp">Fiasp</option>
+                        <option value="Lyumjev">Lyumjev</option>
+                        <option value="Admelog">Admelog</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="wizard-step" data-step="7">
+                <div class="wizard-done">
+                    <div class="wizard-done-icon">&#10003;</div>
+                    <h2>You're All Set</h2>
+                    <p>Your settings have been saved. You can change them any time from the settings screen.</p>
+                </div>
+            </div>
+            <div class="wizard-nav">
+                <button id="wizardBackBtn" class="wizard-btn-back" style="visibility:hidden">Back</button>
+                <div class="wizard-nav-right">
+                    <button id="wizardSkipBtn" class="wizard-btn-skip">Skip for now</button>
+                    <button id="wizardNextBtn" class="wizard-btn-next">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

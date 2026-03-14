@@ -1,8 +1,10 @@
-const CACHE_NAME = 'bolus-calc-v2';
+const CACHE_NAME = 'bolus-calc-v3';
 const ASSETS = [
   './',
   './index.html',
+  './calculator.html',
   './style.css',
+  './landing.css',
   './app.js',
   './manifest.json'
 ];
