@@ -199,12 +199,12 @@ function renderRatioResults(results) {
         if (isSelected) classes += ' selected';
 
         const labelHtml = r.label ? `<span class="ratio-label">${r.label}</span>` : '';
-        const checkHtml = isSelected ? '<span class="ratio-check">&#10003;</span>' : '';
 
         return `
         <div class="${classes}" data-index="${i}">
+            <span class="ratio-radio"></span>
             <div>
-                ${checkHtml}<input class="ratio-number" type="number" inputmode="decimal" step="1"
+                <input class="ratio-number" type="number" inputmode="decimal" step="1"
                        value="${r.ratio}" data-ratio-index="${i}">
                 ${labelHtml}
             </div>

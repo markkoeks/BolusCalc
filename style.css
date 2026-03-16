@@ -272,7 +272,7 @@ input:focus {
 
 .ratio-header {
     display: grid;
-    grid-template-columns: 70px 1fr 1fr 1fr 36px;
+    grid-template-columns: 24px 70px 1fr 1fr 1fr 36px;
     gap: 4px;
     padding: 0 4px 10px;
     border-bottom: 1px solid var(--border);
@@ -289,14 +289,13 @@ input:focus {
 
 .ratio-row {
     display: grid;
-    grid-template-columns: 70px 1fr 1fr 1fr 36px;
+    grid-template-columns: 24px 70px 1fr 1fr 1fr 36px;
     gap: 4px;
     align-items: center;
     padding: 12px 4px;
     border-radius: var(--radius-input);
     cursor: pointer;
     transition: background 0.15s;
-    border-left: 3px solid transparent;
 }
 
 .ratio-row:hover {
@@ -305,7 +304,6 @@ input:focus {
 
 .ratio-row.selected {
     background: var(--accent-light);
-    border-left-color: var(--accent);
 }
 
 .ratio-row .ratio-number {
@@ -352,14 +350,28 @@ input:focus {
     font-weight: 800;
 }
 
-/* Selected ratio checkmark */
-.ratio-check {
-    display: inline-block;
-    color: var(--accent);
-    font-size: 0.75rem;
-    font-weight: 700;
-    margin-right: 4px;
-    vertical-align: middle;
+/* Radio-dot selection indicator */
+.ratio-radio {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--input-bg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.ratio-row.selected .ratio-radio {
+    border-color: var(--accent);
+}
+
+.ratio-row.selected .ratio-radio::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--accent);
 }
 
 .ratio-remove {
