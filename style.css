@@ -348,6 +348,18 @@ input:focus {
 
 .ratio-row.selected .ratio-total {
     color: var(--accent);
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+/* Selected ratio checkmark */
+.ratio-check {
+    display: inline-block;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 4px;
+    vertical-align: middle;
 }
 
 .ratio-remove {
@@ -916,6 +928,38 @@ select:focus {
 }
 
 .log-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+/* Custom Bolus Row */
+.custom-bolus-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.custom-bolus-input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px !important;
+    font-size: 0.95rem !important;
+}
+
+.custom-bolus-btn {
+    background: none;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    border-radius: var(--radius-input);
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+}
+
+.custom-bolus-btn:active {
+    background: var(--accent);
+    color: white;
+}
 
 .reset-button {
     width: 100%;

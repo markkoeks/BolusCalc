@@ -92,6 +92,8 @@ const el = {
     ratioResults: document.getElementById('ratioResults'),
     historyList: document.getElementById('historyList'),
     addBolusBtn: document.getElementById('addBolusBtn'),
+    customBolusInput: document.getElementById('customBolusInput'),
+    customBolusBtn: document.getElementById('customBolusBtn'),
     // Settings summary
     settingsSummary: document.getElementById('settingsSummary'),
     summaryTarget: document.getElementById('summaryTarget'),
@@ -197,11 +199,12 @@ function renderRatioResults(results) {
         if (isSelected) classes += ' selected';
 
         const labelHtml = r.label ? `<span class="ratio-label">${r.label}</span>` : '';
+        const checkHtml = isSelected ? '<span class="ratio-check">&#10003;</span>' : '';
 
         return `
         <div class="${classes}" data-index="${i}">
             <div>
-                <input class="ratio-number" type="number" inputmode="decimal" step="1"
+                ${checkHtml}<input class="ratio-number" type="number" inputmode="decimal" step="1"
                        value="${r.ratio}" data-ratio-index="${i}">
                 ${labelHtml}
             </div>
@@ -211,6 +214,14 @@ function renderRatioResults(results) {
             <button class="ratio-remove" data-remove-index="${i}" title="Remove">&times;</button>
         </div>
     `}).join('');
+
+    // Dynamic button text
+    const selectedResult = results[selectedRatioIndex];
+    if (selectedResult && selectedResult.rounded > 0) {
+        el.addBolusBtn.textContent = `Log ${selectedResult.rounded.toFixed(1)}u`;
+    } else {
+        el.addBolusBtn.textContent = 'Log This Bolus';
+    }
 }
 
 // --- History ---
@@ -295,6 +306,22 @@ el.addBolusBtn.addEventListener('click', () => {
         localStorage.setItem('bolusHistory', JSON.stringify(bolusHistory));
         calculate();
     }
+});
+
+// Custom bolus logging
+el.customBolusBtn.addEventListener('click', () => {
+    const val = el.customBolusInput.value.replace(/,/g, '.');
+    const amount = Math.round((parseFloat(val) || 0) * 2) / 2;
+    if (amount > 0) {
+        bolusHistory.push({ timestamp: Date.now(), amount });
+        localStorage.setItem('bolusHistory', JSON.stringify(bolusHistory));
+        el.customBolusInput.value = '';
+        calculate();
+    }
+});
+
+el.customBolusInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') el.customBolusBtn.click();
 });
 
 // Plus button: append "+" to carbs input (no stacking)
@@ -516,6 +543,13 @@ document.getElementById('sRatioList').addEventListener('click', (e) => {
         ratios.splice(idx, 1);
         if (selectedRatioIndex >= ratios.length) selectedRatioIndex = ratios.length - 1;
         renderSettingsRatios();
+    }
+});
+
+// Enter key dismisses keyboard on settings ratio labels
+document.getElementById('sRatioList').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.classList.contains('s-ratio-label')) {
+        e.target.blur();
     }
 });
 
@@ -793,6 +827,13 @@ document.getElementById('wRatioList').addEventListener('click', (e) => {
         const idx = parseInt(btn.dataset.wRemove);
         wizardRatios.splice(idx, 1);
         renderWizardRatios();
+    }
+});
+
+// Enter key dismisses keyboard on wizard ratio labels
+document.getElementById('wRatioList').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.classList.contains('w-ratio-label')) {
+        e.target.blur();
     }
 });
 
